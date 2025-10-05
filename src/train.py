@@ -1,55 +1,80 @@
-from __future__ import annotations
-import argparse, joblib, numpy as np, pandas as pd
-from sklearn.model_selection import StratifiedKFold
-from sklearn.metrics import log_loss
+from pathlib import Path
+import argparse
+import joblib
+import numpy as np
+import pandas as pd
+from sklearn.preprocessing import StandardScaler
+from sklearn.model_selection import train_test_split
+from sklearn.utils.class_weight import compute_sample_weight
 from xgboost import XGBClassifier
 
-from .utils import PROCESSED_DIR, MODEL_PATH, Ensemble
+def main():
+    parser = argparse.ArgumentParser(description="Train XGBoost model with best parameters.")
+    parser.add_argument("--csv", required=True, help="Path to cleaned CSV")
+    parser.add_argument("--test-size", type=float, default=0.2)
+    parser.add_argument("--random-state", type=int, default=42)
+    parser.add_argument("--use-class-weights", action="store_true")
+    # Best parameters
+    parser.add_argument("--n_estimators", type=int, default=1200)
+    parser.add_argument("--learning_rate", type=float, default=0.01)
+    parser.add_argument("--max_depth", type=int, default=5)
+    parser.add_argument("--min_child_weight", type=int, default=5)
+    parser.add_argument("--gamma", type=float, default=0.3)
+    parser.add_argument("--subsample", type=float, default=0.8)
+    parser.add_argument("--colsample_bytree", type=float, default=0.9)
+    parser.add_argument("--reg_alpha", type=float, default=0.0)
+    parser.add_argument("--reg_lambda", type=float, default=1.2)
+    args = parser.parse_args()
 
-def compute_class_weights(y: np.ndarray) -> dict:
-    classes, counts = np.unique(y, return_counts=True)
-    total = counts.sum()
-    return {cls: total / (len(classes) * cnt) for cls, cnt in zip(classes, counts)}
+    # Load data
+    df = pd.read_csv(args.csv)
+    X = df[["koi_period","koi_duration","koi_depth","koi_prad","koi_snr"]].values
+    # Map string labels to integers
+    label_map = {"FALSE POSITIVE":0, "CANDIDATE":1, "CONFIRMED":2}
+    y = df["koi_disposition"].map(label_map).values
 
-def main(n_estimators: int, max_depth: int, learning_rate: float, min_child_weight: int, gamma: float):
-    X_train = pd.read_parquet(PROCESSED_DIR / "X_train.parquet")
-    y_train = pd.read_csv(PROCESSED_DIR / "y_train.csv").values.ravel()
+    # Train/test split
+    X_train, X_test, y_train, y_test = train_test_split(
+        X, y, test_size=args.test_size, random_state=args.random_state, stratify=y
+    )
 
-    skf = StratifiedKFold(n_splits=5, shuffle=True, random_state=42)
-    models, losses = [], []
+    # Scale features
+    scaler = StandardScaler()
+    X_train = scaler.fit_transform(X_train)
+    X_test = scaler.transform(X_test)
 
-    for fold,(tr,va) in enumerate(skf.split(X_train, y_train),1):
-        m = XGBClassifier(
-            objective="multi:softprob",
-            eval_metric="mlogloss",
-            n_estimators=n_estimators,
-            max_depth=max_depth,
-            learning_rate=learning_rate,
-            subsample=0.9, colsample_bytree=0.9,
-            min_child_weight=min_child_weight, gamma=gamma,
-            random_state=42+fold, n_jobs=0,
-        )
-        cw = compute_class_weights(y_train[tr])
-        sw = np.array([cw[y] for y in y_train[tr]])
-        m.fit(X_train.iloc[tr], y_train[tr],
-              sample_weight=sw,
-              eval_set=[(X_train.iloc[va], y_train[va])],
-              verbose=False)
-        proba = m.predict_proba(X_train.iloc[va])
-        losses.append(log_loss(y_train[va], proba))
-        models.append(m)
+    # Compute sample weights if needed
+    sample_weights = None
+    if args.use_class_weights:
+        sample_weights = compute_sample_weight(class_weight="balanced", y=y_train)
 
-    print(f"CV mlogloss: mean={np.mean(losses):.4f} ± {np.std(losses):.4f}")
-    ens = Ensemble(models)
-    joblib.dump(ens, MODEL_PATH)
-    print("Saved model →", MODEL_PATH)
+    # Initialize XGBoost
+    model = XGBClassifier(
+        n_estimators=args.n_estimators,
+        learning_rate=args.learning_rate,
+        max_depth=args.max_depth,
+        min_child_weight=args.min_child_weight,
+        gamma=args.gamma,
+        subsample=args.subsample,
+        colsample_bytree=args.colsample_bytree,
+        reg_alpha=args.reg_alpha,
+        reg_lambda=args.reg_lambda,
+        objective="multi:softprob",
+        num_class=3,
+        use_label_encoder=False,
+        eval_metric="mlogloss",
+        random_state=args.random_state
+    )
+
+    # Fit model
+    model.fit(X_train, y_train, sample_weight=sample_weights)
+
+    # Save model and scaler
+    Path("models").mkdir(parents=True, exist_ok=True)
+    joblib.dump(model, "models/model.joblib")
+    joblib.dump(scaler, "models/scaler.joblib")
+    print("✅ Saved model → models/model.joblib")
+    print("✅ Saved scaler → models/scaler.joblib")
 
 if __name__ == "__main__":
-    ap = argparse.ArgumentParser()
-    ap.add_argument("--n_estimators", type=int, default=400)
-    ap.add_argument("--max_depth", type=int, default=5)
-    ap.add_argument("--learning_rate", type=float, default=0.08)
-    ap.add_argument("--min_child_weight", type=int, default=3)
-    ap.add_argument("--gamma", type=float, default=0.0)
-    a = ap.parse_args()
-    main(a.n_estimators, a.max_depth, a.learning_rate, a.min_child_weight, a.gamma)
+    main()

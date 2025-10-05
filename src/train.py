@@ -73,8 +73,8 @@ def main():
     Path("models").mkdir(parents=True, exist_ok=True)
     joblib.dump(model, "models/model.joblib")
     joblib.dump(scaler, "models/scaler.joblib")
-    print("✅ Saved model → models/model.joblib")
-    print("✅ Saved scaler → models/scaler.joblib")
+    print("[OK] Saved model -> models/model.joblib")
+    print("[OK] Saved scaler -> models/scaler.joblib")
 
 if __name__ == "__main__":
     main()

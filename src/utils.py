@@ -47,7 +47,7 @@ ALIASES = {
 }
 LABEL_ALIASES = ["koi_disposition", "disposition", "tfopwg_disp", "k2_disposition", "disp"]
 
-PREPROCESSOR_PATH = MODELS_DIR / "preprocessor.pkl"
+PREPROCESSOR_PATH = MODELS_DIR / "scaler.joblib"  # Updated to match preprocess.py
 MODEL_PATH = MODELS_DIR / "model.joblib"
 
 # ---------- simple ensemble class (used by train/evaluate) ----------

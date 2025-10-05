@@ -38,11 +38,33 @@ def main():
 
     # Confusion matrix
     cm = confusion_matrix(y, y_pred)
-    plt.imshow(cm, cmap="Blues")
-    plt.title("Confusion Matrix")
+    labels = ["FALSE POSITIVE", "CANDIDATE", "CONFIRMED"]
+    
+    # Create a better confusion matrix plot
+    plt.figure(figsize=(8, 6))
+    plt.imshow(cm, interpolation='nearest', cmap='Blues')
+    plt.title('Confusion Matrix')
     plt.colorbar()
-    plt.savefig("data/processed/confusion_matrix.png")
-    print("Saved confusion matrix → data/processed/confusion_matrix.png")
+    
+    # Add text annotations
+    thresh = cm.max() / 2.
+    for i in range(cm.shape[0]):
+        for j in range(cm.shape[1]):
+            plt.text(j, i, format(cm[i, j], 'd'),
+                    horizontalalignment="center",
+                    color="white" if cm[i, j] > thresh else "black",
+                    fontsize=12, fontweight='bold')
+    
+    # Add labels
+    tick_marks = np.arange(len(labels))
+    plt.xticks(tick_marks, labels, rotation=45)
+    plt.yticks(tick_marks, labels)
+    plt.ylabel('True Label')
+    plt.xlabel('Predicted Label')
+    plt.tight_layout()
+    plt.savefig("data/processed/confusion_matrix.png", dpi=150, bbox_inches='tight')
+    plt.close()
+    print("Saved confusion matrix -> data/processed/confusion_matrix.png")
 
 if __name__ == "__main__":
     main()

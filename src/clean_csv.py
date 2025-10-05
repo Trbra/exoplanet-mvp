@@ -91,7 +91,7 @@ def main():
         df = df.drop_duplicates().reset_index(drop=True)
         out.parent.mkdir(parents=True, exist_ok=True)
         df.to_csv(out, index=False, encoding="utf-8")
-        print(f"[OK] Wrote → {out} | Rows: {len(df)}")
+        print(f"[OK] Wrote -> {out} | Rows: {len(df)}")
     except Exception as e:
         print(f"[ERROR] {e}", file=sys.stderr)
         sys.exit(1)

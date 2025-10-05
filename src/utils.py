@@ -39,13 +39,24 @@ INT_TO_LABEL = {v: k for k, v in LABEL_TO_INT.items()}
 
 # alias support for Kepler/K2/TESS CSVs
 ALIASES = {
-    "koi_period":   ["koi_period", "period", "orbital_period", "pl_orbper", "per"],
-    "koi_duration": ["koi_duration", "duration", "dur_hr", "transit_duration_hr", "dur", "duration_hours"],
-    "koi_depth":    ["koi_depth", "depth_ppm", "depth", "tran_depth_ppm", "transit_depth_ppm"],
-    "koi_prad":     ["koi_prad", "planet_radius_re", "pl_rade", "prad_re", "radius_re"],
-    "koi_snr":      ["koi_snr", "snr", "model_snr", "mes", "koi_model_snr"],
+    "koi_period":   ["koi_period", "period", "orbital_period", "pl_orbper", "per", "toi_period", "epic_period"],
+    "koi_duration": ["koi_duration", "duration", "dur_hr", "transit_duration_hr", "dur", "duration_hours", "toi_duration", "epic_duration"],
+    "koi_depth":    ["koi_depth", "depth_ppm", "depth", "tran_depth_ppm", "transit_depth_ppm", "toi_depth", "epic_depth"],
+    "koi_prad":     ["koi_prad", "planet_radius_re", "pl_rade", "prad_re", "radius_re", "toi_prad", "epic_prad"],
+    "koi_snr":      ["koi_snr", "snr", "model_snr", "mes", "koi_model_snr", "toi_snr", "epic_snr"],
 }
-LABEL_ALIASES = ["koi_disposition", "disposition", "tfopwg_disp", "k2_disposition", "disp"]
+LABEL_ALIASES = ["koi_disposition", "disposition", "tfopwg_disp", "k2_disposition", "disp", "toi_disposition", "epic_disposition"]
+
+# Mission support
+MISSION_ALIASES = ["mission", "facility", "pl_facility", "discoverymethod"]
+MISSION_MAPPING = {
+    "kepler": "Kepler",
+    "k2": "K2", 
+    "tess": "TESS",
+    "transit": "Transit",  # Generic transit method
+    "radial velocity": "RV",
+    "direct imaging": "Direct"
+}
 
 PREPROCESSOR_PATH = MODELS_DIR / "scaler.joblib"  # Updated to match preprocess.py
 MODEL_PATH = MODELS_DIR / "model.joblib"

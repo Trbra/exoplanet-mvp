@@ -72,7 +72,7 @@ Automatically classify exoplanet transit signals using machine learning, includi
 
 ## ⚡ Run the App
 ```bash
-git clone 
+git clone https://github.com/Trbra/exoplanet-mvp.git
 cd exoplanet-classifier
 python -m venv .venv
 source .venv/bin/activate  # or .venv\Scripts\activate on Windows

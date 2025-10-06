@@ -584,11 +584,10 @@ with TABS[1]:
         iqr_k = st.number_input("IQR factor", value=3.0, min_value=1.0, max_value=5.0, step=0.5)
     
     if st.button("🧹 Clean CSV"):
-        python_exe = ROOT / "exoplanet-mvp" / "Scripts" / "python.exe"
+        python_exe = ROOT / ".venv" / "Scripts" / "python.exe"
         cmd = f'"{python_exe}" -m src.clean_csv --in "{raw_csv_path}" --out "{clean_csv_path}"'
         if drop_outliers:
             cmd += f" --drop-outliers --iqr-k {iqr_k}"
-        
         run_command(cmd, "Cleaning CSV")
     
     st.markdown("---")
@@ -601,7 +600,7 @@ with TABS[1]:
     with c1:
         st.subheader("🔄 Step 1: Preprocessing")
         if st.button("1️⃣ Load & Preprocess"):
-            python_exe = ROOT / "exoplanet-mvp" / "Scripts" / "python.exe"
+            python_exe = ROOT / ".venv" / "Scripts" / "python.exe"
             cmd = f'"{python_exe}" -m src.preprocess --csv "{csv_path}"'
             run_command(cmd, "Preprocessing data")
 
@@ -634,21 +633,21 @@ with TABS[1]:
                 "reg_lambda": reg_lambda,
             })
 
+
         if st.button("2️⃣ Train Model"):
-            python_exe = ROOT / "exoplanet-mvp" / "Scripts" / "python.exe"
+            python_exe = ROOT / ".venv" / "Scripts" / "python.exe"
             cmd = (f'"{python_exe}" -m src.train --csv "{csv_path}" '
-                   f'--n_estimators {n_estimators} --learning_rate {learning_rate} '
-                   f'--max_depth {max_depth} --min_child_weight {min_child_weight} '
-                   f'--gamma {gamma} --subsample {subsample} '
-                   f'--colsample_bytree {colsample_bytree} --reg_alpha {reg_alpha} '
-                   f'--reg_lambda {reg_lambda}')
-            
+                f'--n_estimators {n_estimators} --learning_rate {learning_rate} '
+                f'--max_depth {max_depth} --min_child_weight {min_child_weight} '
+                f'--gamma {gamma} --subsample {subsample} '
+                f'--colsample_bytree {colsample_bytree} --reg_alpha {reg_alpha} '
+                f'--reg_lambda {reg_lambda}')
             run_command(cmd, "Training model with 5-fold CV")
 
     with c3:
         st.subheader("📊 Step 3: Evaluation")
         if st.button("3️⃣ Evaluate Model"):
-            python_exe = ROOT / "exoplanet-mvp" / "Scripts" / "python.exe"
+            python_exe = ROOT / ".venv" / "Scripts" / "python.exe"
             cmd = f'"{python_exe}" -m src.evaluate --csv "{csv_path}"'
             run_command(cmd, "Evaluating model performance")
         
